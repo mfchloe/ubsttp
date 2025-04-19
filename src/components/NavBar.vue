@@ -15,6 +15,13 @@
         >
 
         <router-link
+          to="/achievement"
+          class="nav-link"
+          :class="{ active: isActive('/achievement') }"
+          >Achievement</router-link
+        >
+
+        <router-link
           to="/profile"
           class="nav-link"
           :class="{ active: isActive('/profile') }"

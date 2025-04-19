@@ -7,6 +7,7 @@ import SignUp from "@/views/SignUp.vue";
 import SignIn from "@/views/SignIn.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import LearningPath from "@/views/LearningPath.vue";
+import AchievementView from "@/views/AchievementView.vue";
 import NotFound from "@/views/NotFound.vue";
 
 const routes = [
@@ -28,6 +29,12 @@ const routes = [
     path: "/learning-path",
     name: "LearningPath",
     component: LearningPath,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/achievement",
+    name: "Achievement",
+    component: AchievementView,
     meta: { requiresAuth: true },
   },
   {
