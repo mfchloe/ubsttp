@@ -9,6 +9,9 @@ npm install
 ```
 npm run serve
 ```
+test account: chloweetan@gmail.com
+password: Nus3103!!!!!
+
 
 ### Compiles and minifies for production
 ```
