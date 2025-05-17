@@ -1,8 +1,11 @@
 <template>
   <div class="profile-view">
-    <div class="background-container" :style="{ backgroundImage: `url(${bgImage})` }">
+    <div
+      class="background-container"
+      :style="{ backgroundImage: `url(${bgImage})` }"
+    >
       <div class="overlay-text">
-        <h1 style="font-weight: 900">Hello {{ profileData.name }}!</h1>
+        <h1>Hello {{ profileData.name }}!</h1>
         <p>This is your profile page. You can edit your details here!</p>
       </div>
     </div>
@@ -13,43 +16,70 @@
       <div class="column">
         <label>Name:</label>
         <div class="fixed-data">
-          <p><strong>{{ profileData.name }}</strong></p>
+          <p>
+            <strong>{{ profileData.name }}</strong>
+          </p>
         </div>
         <br />
 
         <label>Email:</label>
         <div class="fixed-data">
-          <p><strong>{{ profileData.email }}</strong></p>
+          <p>
+            <strong>{{ profileData.email }}</strong>
+          </p>
         </div>
         <br />
 
         <label>Career Stage:</label>
         <div class="fixed-data">
-          <p><strong>{{ profileData.careerStage || 'Not specified' }}</strong></p>
+          <p>
+            <strong>{{ profileData.careerStage || "Not specified" }}</strong>
+          </p>
         </div>
         <br />
 
         <label>Skills:</label>
-        <div class="fixed-data">
-          <p><strong>{{ profileData.skills.length ? profileData.skills.join(', ') : 'Not specified' }}</strong></p>
+        <div class="chip-container">
+          <v-chip
+            v-for="(skill, index) in profileData.skills"
+            :key="'skill-' + index"
+            color="primary"
+            variant="tonal"
+            class="tag-chip"
+          >
+            {{ skill }}
+          </v-chip>
+          <p v-if="!profileData.skills.length"><em>Not specified</em></p>
         </div>
+
         <br />
 
         <label>Goals:</label>
         <div class="fixed-data">
-          <p><strong>{{ profileData.goals.length ? profileData.goals.join(', ') : 'Not specified' }}</strong></p>
+          <p>
+            <strong>{{
+              profileData.goals.length
+                ? profileData.goals.join(", ")
+                : "Not specified"
+            }}</strong>
+          </p>
         </div>
         <br />
 
         <label>Available Time:</label>
         <div class="fixed-data">
-          <p><strong>{{ profileData.availableTime || 'Not specified' }}</strong></p>
+          <p>
+            <strong>{{ profileData.availableTime || "Not specified" }}</strong>
+          </p>
         </div>
       </div>
 
       <div class="column">
         <div class="profile-container">
-          <img :src="profileData.profileURL || defaultProfilePicture" alt="Profile Picture" />
+          <img
+            :src="profileData.profileURL || defaultProfilePicture"
+            alt="Profile Picture"
+          />
           <button id="edit-btn" @click="dialog = true">Edit</button>
         </div>
       </div>
@@ -82,11 +112,18 @@
 
 <script>
 import backgroundImage from "@/assets/profile_background.png";
-import defaultProfilePicture from "@/assets/default_profile.png"
+import defaultProfilePicture from "@/assets/default_profile.png";
 import { auth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { firestore, storage } from "../firebase";
-import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default {
@@ -118,7 +155,10 @@ export default {
         if (!currentUser) return;
 
         const usersRef = collection(firestore, "users");
-        const usersQuery = query(usersRef, where("userID", "==", currentUser.uid));
+        const usersQuery = query(
+          usersRef,
+          where("userID", "==", currentUser.uid)
+        );
 
         onSnapshot(usersQuery, (snapshot) => {
           if (!snapshot.empty) {
@@ -202,7 +242,18 @@ export default {
   background-color: #f3f3f3;
   padding: 8px;
   border-radius: 10px;
-  width: 300px;
+  width: 100%;
+  text-align: left;
+}
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  background-color: #f3f3f3;
+  border-radius: 10px;
+  width: 100%;
 }
 
 #edit-btn {
@@ -240,14 +291,15 @@ export default {
   flex-wrap: wrap;
   justify-content: space-between;
   margin: 20px auto;
-  width: 80%;
+  width: 90%;
   gap: 20px;
 }
 
 .column {
-  width: 45%;
+  flex: 1 1 48%;
   display: flex;
   flex-direction: column;
+  min-width: 300px;
 }
 
 .profile-container {
@@ -271,5 +323,11 @@ export default {
 
 .profile-details .fixed-data {
   margin-bottom: 15px;
+}
+
+.tag-chip {
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 14px;
 }
 </style>

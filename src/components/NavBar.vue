@@ -59,6 +59,7 @@
     margin-left: 20px;
     height: 60px;
     width: auto;
+    padding: 15px;
   }
   
   .navbar-right {
