@@ -1,4 +1,4 @@
-# empowher (UBS TTP)
+# UBS Tomorrow's Talent Program (TTP): Project EmpowHer
 
 ## Project setup
 ```
