@@ -281,7 +281,7 @@ h1 {
 /* Card Styling */
 .chart-card {
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   height: 300px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
