@@ -9,8 +9,9 @@ npm install
 ```
 npm run serve
 ```
-test account: chloweetan@gmail.com
-password: Nus3103!!!!!
+Email: ubsttp@gmail.com
+Email Password: UbsTTP!!!
+EmpowHer Account Password: UbsTTP3103!
 
 
 ### Compiles and minifies for production
