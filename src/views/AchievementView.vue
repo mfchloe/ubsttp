@@ -1,6 +1,5 @@
 <template>
   <div class="achievements-container">
-    <h1>Your Achievements</h1>
     
     <!-- Badges Section -->
     <v-card class="achievement-card mt-4" elevation="2">
@@ -9,38 +8,32 @@
         Your Badges
       </v-card-title>
       <v-card-text>
-        <div v-if="userBadges.length === 0" class="text-center pa-4 grey--text">
+        <div v-if="loading" class="text-center pa-4">
+          <v-progress-circular indeterminate color="#f08bb5"></v-progress-circular>
+          <div class="mt-2">Loading your achievements...</div>
+        </div>
+        <div v-else-if="userBadges.length === 0" class="text-center pa-4 grey--text">
           You haven't earned any badges yet. Complete modules to earn badges!
         </div>
         <div v-else class="badges-grid">
-          <v-hover v-for="badge in userBadges" :key="badge.id">
+          <v-hover v-for="badge in userBadges" :key="badge.badgeID">
             <template v-slot="{ hover }">
               <v-card
                 class="badge-item"
                 :elevation="hover ? 8 : 2"
                 :class="{ 'on-hover': hover }"
               >
-                <div class="badge-icon-container" :class="`badge-color-${badge.color}`">
-                  <v-icon size="36">{{ badge.icon }}</v-icon>
+                <div class="badge-icon-container" :class="`badge-color-${getBadgeColor(badge.title)}`">
+                  <v-icon size="36">{{ getBadgeIcon(badge.title) }}</v-icon>
                 </div>
-                <div class="badge-name">{{ badge.name }}</div>
-                <div class="badge-description">{{ badge.description }}</div>
-                <div class="badge-earned">Earned: {{ formatDate(badge.earnedDate) }}</div>
+                <div class="badge-content">
+                  <div class="badge-name">{{ badge.title }}</div>
+                  <div class="badge-description">{{ badge.description }}</div>
+                  <div class="badge-earned">Earned</div>
+                </div>
               </v-card>
             </template>
           </v-hover>
-          <v-card
-            v-for="n in (4 - userBadges.length)"
-            :key="`empty-${n}`"
-            class="badge-item badge-locked"
-            elevation="1"
-          >
-            <div class="badge-icon-container badge-color-grey">
-              <v-icon size="36">mdi-lock</v-icon>
-            </div>
-            <div class="badge-name">???</div>
-            <div class="badge-description">Complete more modules to unlock</div>
-          </v-card>
         </div>
       </v-card-text>
     </v-card>
@@ -52,25 +45,31 @@
         Leaderboard
       </v-card-title>
       <v-card-text>
-
+        <v-tabs v-model="leaderboardTab" centered color="#f08bb5" slider-color="#f08bb5">
+          <v-tab value="modules">Modules Completed</v-tab>
+          <v-tab value="badges">Badges Earned</v-tab>
+        </v-tabs>
         
-        <v-tabs-items v-model="leaderboardTab">
+        <v-window v-model="leaderboardTab">
           <!-- Modules Completion Leaderboard -->
-          <v-tab-item>
+          <v-window-item value="modules">
+            <div>
             <v-data-table
               :headers="moduleHeaders"
               :items="moduleLeaderboard"
-              :items-per-page="5"
+              :items-per-page="10"
               :loading="loading"
               class="leaderboard-table"
               hide-default-footer
             >
-              <template v-slot:item="{ item }">
-                <tr>
+              <template v-slot:item="{ item, index }">
+                <tr :class="{ 'current-user-row': item.isCurrentUser }">
                   <td>
                     <div class="rank-cell">
-                      <v-icon v-if="item.rank <= 3" color="amber darken-2">mdi-crown</v-icon>
-                      <span :class="{ 'font-weight-bold': item.isCurrentUser }">{{ item.rank }}</span>
+                      <v-icon v-if="index === 0" color="#FFD700" size="20">mdi-medal</v-icon>
+                      <v-icon v-else-if="index === 1" color="#C0C0C0" size="20">mdi-medal</v-icon>
+                      <v-icon v-else-if="index === 2" color="#CD7F32" size="20">mdi-medal</v-icon>
+                      <span :class="{ 'font-weight-bold': item.isCurrentUser }">{{ index + 1 }}</span>
                     </div>
                   </td>
                   <td>
@@ -80,41 +79,36 @@
                         <img v-else :src="item.avatar" alt="User Avatar">
                       </v-avatar>
                       {{ item.name }}
-                      <v-icon v-if="item.isCurrentUser" small color="#f08bb5" class="ml-2">mdi-account-check</v-icon>
                     </div>
                   </td>
-                  <td>
-                    <div class="progress-cell">
-                      <span class="mr-2">{{ item.modulesFinished }}/5</span>
-                      <v-progress-linear
-                        :value="(item.modulesFinished / 5) * 100"
-                        height="8"
-                        rounded
-                        :color="item.isCurrentUser ? '#f08bb5' : '#b8d6f7'"
-                      ></v-progress-linear>
-                    </div>
+                  <td class="text-right">
+                    <span class="score-number">{{ item.modulesFinished }}</span>
                   </td>
                 </tr>
               </template>
             </v-data-table>
-          </v-tab-item>
+            </div>
+          </v-window-item>
           
           <!-- Badges Leaderboard -->
-          <v-tab-item>
+          <v-window-item value="badges">
+            <div>
             <v-data-table
               :headers="badgeHeaders"
               :items="badgeLeaderboard"
-              :items-per-page="5"
+              :items-per-page="10"
               :loading="loading"
               class="leaderboard-table"
               hide-default-footer
             >
-              <template v-slot:item="{ item }">
-                <tr>
+              <template v-slot:item="{ item, index }">
+                <tr :class="{ 'current-user-row': item.isCurrentUser }">
                   <td>
                     <div class="rank-cell">
-                      <v-icon v-if="item.rank <= 3" color="amber darken-2">mdi-crown</v-icon>
-                      <span :class="{ 'font-weight-bold': item.isCurrentUser }">{{ item.rank }}</span>
+                      <v-icon v-if="index === 0" color="#FFD700" size="20">mdi-medal</v-icon>
+                      <v-icon v-else-if="index === 1" color="#C0C0C0" size="20">mdi-medal</v-icon>
+                      <v-icon v-else-if="index === 2" color="#CD7F32" size="20">mdi-medal</v-icon>
+                      <span :class="{ 'font-weight-bold': item.isCurrentUser }">{{ index + 1 }}</span>
                     </div>
                   </td>
                   <td>
@@ -124,20 +118,17 @@
                         <img v-else :src="item.avatar" alt="User Avatar">
                       </v-avatar>
                       {{ item.name }}
-                      <v-icon v-if="item.isCurrentUser" small color="#f08bb5" class="ml-2">mdi-account-check</v-icon>
                     </div>
                   </td>
-                  <td>
-                    <div class="badges-cell">
-                      <v-icon v-for="n in item.badgeCount" :key="n" small color="#f08bb5" class="mr-1">mdi-medal</v-icon>
-                      <v-icon v-for="n in (5 - item.badgeCount)" :key="`empty-${n}`" small color="grey lighten-2" class="mr-1">mdi-medal-outline</v-icon>
-                    </div>
+                  <td class="text-right">
+                    <span class="score-number">{{ item.badgeCount }}</span>
                   </td>
                 </tr>
               </template>
             </v-data-table>
-          </v-tab-item>
-        </v-tabs-items>
+            </div>
+          </v-window-item>
+        </v-window>
       </v-card-text>
     </v-card>
   </div>
@@ -146,54 +137,29 @@
 <script>
 import { ref, onMounted } from "vue";
 import { auth, firestore } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 
 export default {
   name: "AchievementsView",
   setup() {
     const userBadges = ref([]);
+    const availableBadges = ref([]);
     const moduleLeaderboard = ref([]);
     const badgeLeaderboard = ref([]);
-    const leaderboardTab = ref(0);
+    const leaderboardTab = ref("modules");
     const loading = ref(true);
     const currentUserId = ref("");
-    
-    // Badge data mapping (map badgeId to badge details)
-    const badgeData = {
-      "A3WY3eqfVK6a9a1AgkzH": {
-        id: "A3WY3eqfVK6a9a1AgkzH",
-        name: "Coding Master",
-        description: "Completed all coding modules",
-        icon: "mdi-code-braces",
-        color: "blue"
-      },
-      "K9bRk0kI7bOns79LG3mS": {
-        id: "K9bRk0kI7bOns79LG3mS",
-        name: "Quick Learner",
-        description: "Finished 2 modules in record time",
-        icon: "mdi-rocket",
-        color: "purple"
-      },
-      "y68S2lGmZ2gdCs4cxmVj": {
-        id: "y68S2lGmZ2gdCs4cxmVj",
-        name: "Early Bird",
-        description: "One of the first 100 members",
-        icon: "mdi-bird",
-        color: "orange"
-      },
-      // Add more badges as needed
-    };
     
     const moduleHeaders = [
       { text: "Rank", value: "rank", width: "80px" },
       { text: "Name", value: "name" },
-      { text: "Modules Completed", value: "modulesFinished" }
+      { text: "Modules Completed", value: "modulesFinished", align: "right" }
     ];
     
     const badgeHeaders = [
       { text: "Rank", value: "rank", width: "80px" },
       { text: "Name", value: "name" },
-      { text: "Badges Earned", value: "badgeCount" }
+      { text: "Badges Earned", value: "badgeCount", align: "right" }
     ];
     
     onMounted(async () => {
@@ -205,131 +171,143 @@ export default {
       }
       
       try {
-        // Fetch user's badges
-        const userDoc = await getDoc(doc(firestore, "users", currentUserId.value));
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          
-          // Process user badges
-          if (userData.badges && userData.badges.length > 0) {
-            userData.badges.forEach(badgeId => {
-              if (badgeData[badgeId]) {
-                const badge = {
-                  ...badgeData[badgeId],
-                  earnedDate: new Date() // Ideally this would come from the database
-                };
-                userBadges.value.push(badge);
-              }
-            });
-          }
-          
-          // Fetch leaderboard data
-          await fetchLeaderboards();
-        }
+        await Promise.all([
+          fetchUserData(),
+          fetchAvailableBadges(),
+          fetchLeaderboards()
+        ]);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching achievement data:", error);
       } finally {
         loading.value = false;
       }
     });
     
+    const fetchUserData = async () => {
+      try {
+        const userDoc = await getDoc(doc(firestore, "users", currentUserId.value));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // Fetch user's badges - badges is an array of badge IDs
+          if (userData.badges && Array.isArray(userData.badges) && userData.badges.length > 0) {
+            const badgePromises = userData.badges.map(async (badgeId) => {
+              try {
+                const badgeDoc = await getDoc(doc(firestore, "badges", badgeId));
+                if (badgeDoc.exists()) {
+                  return { badgeID: badgeDoc.id, ...badgeDoc.data() };
+                }
+                return null;
+              } catch (error) {
+                console.error(`Error fetching badge ${badgeId}:`, error);
+                return null;
+              }
+            });
+            
+            const badgeResults = await Promise.all(badgePromises);
+            userBadges.value = badgeResults.filter(badge => badge !== null);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    
+    const fetchAvailableBadges = async () => {
+      try {
+        const badgesSnapshot = await getDocs(collection(firestore, "badges"));
+        const allBadges = badgesSnapshot.docs.map(doc => ({ 
+          badgeID: doc.id, 
+          ...doc.data() 
+        }));
+        
+        // Filter out badges the user already has
+        const earnedBadgeIds = userBadges.value.map(badge => badge.badgeID);
+        availableBadges.value = allBadges.filter(badge => 
+          !earnedBadgeIds.includes(badge.badgeID)
+        );
+      } catch (error) {
+        console.error("Error fetching available badges:", error);
+      }
+    };
+    
     const fetchLeaderboards = async () => {
       try {
-        // In a real app, fetch this data from Firestore
-        // For this implementation, we use mock data for demonstration
-        
-        // Mock leaderboard data (modules completed)
-        moduleLeaderboard.value = [
-          { rank: 1, name: "Alex Johnson", modulesFinished: 5, isCurrentUser: false },
-          { rank: 2, name: "Maya Rodriguez", modulesFinished: 4, isCurrentUser: false },
-          { rank: 3, name: "Chloe", modulesFinished: 2, isCurrentUser: true },
-          { rank: 4, name: "Jordan Lee", modulesFinished: 2, isCurrentUser: false },
-          { rank: 5, name: "Taylor Smith", modulesFinished: 1, isCurrentUser: false }
-        ];
-        
-        // Mock leaderboard data (badges earned)
-        badgeLeaderboard.value = [
-          { rank: 1, name: "Alex Johnson", badgeCount: 5, isCurrentUser: false },
-          { rank: 2, name: "Maya Rodriguez", badgeCount: 4, isCurrentUser: false },
-          { rank: 3, name: "Taylor Smith", badgeCount: 3, isCurrentUser: false },
-          { rank: 4, name: "Chloe", badgeCount: 3, isCurrentUser: true },
-          { rank: 5, name: "Jordan Lee", badgeCount: 2, isCurrentUser: false }
-        ];
-        
-        // Commented implementation for fetching real data from Firestore
-        // I didnt make enough users to fetch real data
-        /*
-        // For modules leaderboard
-        const moduleUsersQuery = query(
-          collection(firestore, "users"),
-          orderBy("modulesFinished", "desc"),
-          limit(10)
-        );
-        const moduleQuerySnapshot = await getDocs(moduleUsersQuery);
-        
-        let moduleRank = 1;
-        const moduleLeaderboardData = [];
-        
-        moduleQuerySnapshot.forEach((doc) => {
+        // Fetch all users for leaderboard
+        const usersSnapshot = await getDocs(collection(firestore, "users"));
+        const allUsers = usersSnapshot.docs.map(doc => {
           const userData = doc.data();
-          moduleLeaderboardData.push({
-            rank: moduleRank++,
-            name: userData.name || "Anonymous",
-            modulesFinished: userData.modulesFinished || 0,
-            isCurrentUser: doc.id === currentUserId.value,
-            avatar: userData.avatar || null
-          });
+          return {
+            userID: doc.id,
+            name: userData.name || userData.email || "Anonymous",
+            avatar: userData.profileURL,
+            modulesFinished: Array.isArray(userData.modulesFinished) ? userData.modulesFinished.length : 0,
+            badgeCount: Array.isArray(userData.badges) ? userData.badges.length : 0,
+            isCurrentUser: doc.id === currentUserId.value
+          };
         });
         
-        moduleLeaderboard.value = moduleLeaderboardData;
+        // Create modules leaderboard (sort by modulesFinished)
+        moduleLeaderboard.value = [...allUsers]
+          .sort((a, b) => b.modulesFinished - a.modulesFinished)
+          .slice(0, 10);
         
-        // For badges leaderboard
-        const badgeUsersQuery = query(
-          collection(firestore, "users"),
-          orderBy("badges", "desc"),
-          limit(10)
-        );
-        const badgeQuerySnapshot = await getDocs(badgeUsersQuery);
+        // Create badges leaderboard (sort by badgeCount)
+        badgeLeaderboard.value = [...allUsers]
+          .sort((a, b) => b.badgeCount - a.badgeCount)
+          .slice(0, 10);
         
-        let badgeRank = 1;
-        const badgeLeaderboardData = [];
-        
-        badgeQuerySnapshot.forEach((doc) => {
-          const userData = doc.data();
-          badgeLeaderboardData.push({
-            rank: badgeRank++,
-            name: userData.name || "Anonymous",
-            badgeCount: (userData.badges || []).length,
-            isCurrentUser: doc.id === currentUserId.value,
-            avatar: userData.avatar || null
-          });
-        });
-        
-        badgeLeaderboard.value = badgeLeaderboardData;
-        */
       } catch (error) {
         console.error("Error fetching leaderboard data:", error);
       }
     };
     
-    const formatDate = (date) => {
-      return new Date(date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
-      });
+    const getBadgeIcon = (title) => {
+      const iconMap = {
+        "First Steps": "mdi-baby-face",
+        "Quick Learner": "mdi-rocket-launch",
+        "Consistent Learner": "mdi-calendar-check",
+        "Knowledge Seeker": "mdi-book-open-page-variant",
+        "Coding Master": "mdi-code-braces",
+        "Team Player": "mdi-account-group",
+        "Problem Solver": "mdi-puzzle",
+        "Tech Pioneer": "mdi-telescope",
+        "Mentor": "mdi-account-star",
+        "Innovator": "mdi-lightbulb-on"
+      };
+      
+      return iconMap[title] || "mdi-medal";
+    };
+    
+    const getBadgeColor = (title) => {
+      const colorMap = {
+        "First Steps": "blue",
+        "Quick Learner": "purple",
+        "Consistent Learner": "green",
+        "Knowledge Seeker": "orange",
+        "Coding Master": "blue",
+        "Team Player": "purple",
+        "Problem Solver": "orange",
+        "Tech Pioneer": "blue",
+        "Mentor": "green",
+        "Innovator": "purple"
+      };
+      
+      return colorMap[title] || "blue";
     };
     
     return {
       userBadges,
+      availableBadges,
       moduleLeaderboard,
       badgeLeaderboard,
       leaderboardTab,
       loading,
       moduleHeaders,
       badgeHeaders,
-      formatDate
+      getBadgeIcon,
+      getBadgeColor
     };
   }
 };
@@ -351,6 +329,7 @@ h1 {
 .achievement-card {
   border-radius: 12px;
   overflow: hidden;
+  background-color: white;
 }
 
 .section-heading {
@@ -364,30 +343,27 @@ h1 {
 /* Badges Grid */
 .badges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
   margin-top: 16px;
 }
 
 .badge-item {
   border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  height: 200px;
+  padding: 20px;
+  height: auto;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   transition: all 0.3s;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .badge-item.on-hover {
   transform: translateY(-5px);
-}
-
-.badge-locked {
-  background-color: #f5f5f5;
-  opacity: 0.7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .badge-icon-container {
@@ -397,7 +373,17 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.badge-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  width: 100%;
 }
 
 .badge-color-blue {
@@ -412,6 +398,10 @@ h1 {
   background-color: #ffcc80;
 }
 
+.badge-color-green {
+  background-color: #c8e6c9;
+}
+
 .badge-color-grey {
   background-color: #e0e0e0;
 }
@@ -419,19 +409,29 @@ h1 {
 .badge-name {
   font-weight: bold;
   font-size: 1.1rem;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  word-wrap: break-word;
+  line-height: 1.3;
 }
 
 .badge-description {
   color: #666;
   font-size: 0.9rem;
-  margin-bottom: 12px;
-  line-height: 1.2;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 .badge-earned {
   font-size: 0.8rem;
-  color: #888;
+  color: #4caf50;
+  font-weight: 600;
+  background-color: #e8f5e8;
+  padding: 4px 12px;
+  border-radius: 12px;
   margin-top: auto;
 }
 
@@ -442,10 +442,15 @@ h1 {
   overflow: hidden;
 }
 
+.current-user-row {
+  background-color: #f8f9ff;
+  border-left: 4px solid #f08bb5;
+}
+
 .rank-cell {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .name-cell {
@@ -458,15 +463,10 @@ h1 {
   color: #f08bb5;
 }
 
-.progress-cell {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.badges-cell {
-  display: flex;
-  align-items: center;
+.score-number {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #272d4e;
 }
 
 /* Tab customization */
@@ -476,14 +476,15 @@ h1 {
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .badges-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
   }
   
   .badge-item {
-    height: 180px;
-    padding: 12px;
+    padding: 16px;
+    min-height: 200px;
   }
   
   .badge-icon-container {
@@ -496,7 +497,17 @@ h1 {
   }
   
   .badge-description {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .badges-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .achievements-container {
+    padding: 1rem;
   }
 }
 </style>
