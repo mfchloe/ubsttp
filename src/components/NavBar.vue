@@ -2,7 +2,7 @@
     <nav class="navbar">
       <div class="navbar-left">
         <router-link to="/">
-          <img src="/Logo.png" alt="EmpowHer" class="logo" />
+          <span class="logo">TTP</span>
         </router-link>
       </div>
   
@@ -53,14 +53,23 @@
     align-items: center;
     background-color: white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 80px;
   }
   
   .logo {
-    margin-left: 20px;
-    height: 60px;
-    width: auto;
-    padding: 15px;
-  }
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-left: 25px;
+}
+
+.navbar-left a {
+  text-decoration: none;
+}
+
   
   .navbar-right {
     display: flex;

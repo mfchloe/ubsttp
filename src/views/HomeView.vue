@@ -1,6 +1,6 @@
 <template>
   <div class="home-container">
-    <h1>Welcome to EmpowHer, {{ userName }}</h1>
+    <h1>Welcome to TTP, {{ userName }}</h1>
     
     <v-container class="dashboard-container">
       <v-row>
