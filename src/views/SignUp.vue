@@ -12,7 +12,7 @@
       <!-- Right side: Sign Up Form -->
       <v-col cols="12" md="6" class="d-flex align-center justify-center">
         <v-form @submit.prevent="handleSubmit" class="form-container">
-          <h2 class="text-h5 font-weight-bold text-left">Join EmpowHer</h2>
+          <h2 class="text-h5 font-weight-bold text-left">Join Us</h2>
 
           <v-text-field
             v-model="name"
